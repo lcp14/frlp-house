@@ -33,11 +33,10 @@ import { createTag, getTagsByLoggedUser } from "@/server/tags";
 import React from "react";
 import { CommandLoading } from "cmdk";
 import { useToast } from "@/components/ui/use-toast";
-import { Tables } from "@/types/supabase";
 import { Badge } from "@/components/ui/badge";
 import Tag from "./tag";
 
-export function TransactionForm({ refetch }: { refetch: () => void }) {
+export function TransactionForm() {
   const { data, isLoading } = useQuery({
     queryKey: ["tags"],
     queryFn: () => getTagsByLoggedUser(),
@@ -110,7 +109,6 @@ export function TransactionForm({ refetch }: { refetch: () => void }) {
         return;
       }
     }
-    void refetch();
     toast({
       title: "Transaction created",
       description: "Transaction has been created successfully",
@@ -123,7 +121,10 @@ export function TransactionForm({ refetch }: { refetch: () => void }) {
 
   const formWatch = form.watch("tags");
 
-  function onSelectTag(field: any, tag: Tables<"tags">): void {
+  function onSelectTag(
+    field: any,
+    tag: z.infer<typeof transactionSchema>["tags"][0],
+  ): void {
     if (field?.value?.filter((element: any) => tag.id === element.id).length)
       return;
     append(tag);

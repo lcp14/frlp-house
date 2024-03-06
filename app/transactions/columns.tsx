@@ -13,11 +13,12 @@ import { MoreHorizontal } from "lucide-react";
 import Tag from "../components/tag";
 
 type Columns = {
-  description: string;
+  description: string | null;
   amount: number;
   transaction_date: string;
-  tags: string[];
-  id: string;
+  tags: {
+    text: string;
+  }[];
 };
 
 export const columns: ColumnDef<Columns>[] = [
@@ -43,6 +44,9 @@ export const columns: ColumnDef<Columns>[] = [
   {
     header: "Date",
     accessorKey: "transaction_date",
+    cell: ({ row }) => {
+      return new Date(row.original.transaction_date).toLocaleDateString();
+    },
   },
   {
     header: "Tags",
@@ -50,43 +54,12 @@ export const columns: ColumnDef<Columns>[] = [
     cell: ({ row }) => {
       return (
         <div className="space-x-1">
-          {row.original.tags?.map((tag: string, index: number) => (
+          {row.original.tags?.map((tag, index: number) => (
             <Tag key={index} tag={tag} />
           ))}
         </div>
       );
     },
-    // cell:  ({ row }) => {
-    //   const supabase = createClient();
-    //   const { data: tags, error } = await supabase
-    //     .from("transactions_tags")
-    //     .select(
-    //       `tag_id (
-    //       text
-    //       )`,
-    //     )
-    //     .eq("transaction_id", row.original.id);
-
-    //   if (error) {
-    //     console.error(error);
-    //     return null;
-    //   }
-    //   return (
-    //     <div>
-    //       <Button variant="ghost" size="sm">
-    //         Add Tag
-    //       </Button>
-    //       {tags?.map((tag) => (
-    //         <span
-    //           key={tag.text}
-    //           className="mr-1 rounded-full bg-gray-200 px-2 py-1 text-xs"
-    //         >
-    //           {tag.text}
-    //         </span>
-    //       ))}
-    //     </div>
-    //   );
-    // },
   },
   {
     id: "actions",

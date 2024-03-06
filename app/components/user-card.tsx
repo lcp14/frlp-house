@@ -9,22 +9,21 @@ import {
 import { createClient } from "../utils/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UserIcon } from "lucide-react";
-export default async function UserCard() {
-  const supabase = createClient();
-  const { data } = await supabase.auth.getUser();
+
+import { MoonIcon, SunIcon } from "@radix-ui/react-icons";
+
+export default function UserCard({ avatar_url }: { avatar_url: string }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger>
         <Avatar>
-          <AvatarImage src={data.user?.user_metadata.avatar_url} />
+          <AvatarImage src={avatar_url} />
           <AvatarFallback delayMs={20}>
-            {" "}
-            <UserIcon />{" "}
+            <UserIcon />
           </AvatarFallback>
         </Avatar>{" "}
       </DropdownMenuTrigger>
       <DropdownMenuContent side="bottom">
-        <DropdownMenuItem> Logout </DropdownMenuItem>
         <DropdownMenuItem> Logout </DropdownMenuItem>
         <DropdownMenuItem> Logout </DropdownMenuItem>
         <DropdownMenuSeparator />
