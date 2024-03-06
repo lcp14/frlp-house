@@ -54,10 +54,10 @@ export function TransactionForm() {
     transaction_date: z.date(),
     tags: z.array(
       z.object({
-        id: z.number().nullable(),
+        id: z.number().optional().nullable(),
         text: z.string(),
-        created_at: z.string().nullable(),
-        created_by: z.string().nullable(),
+        created_at: z.string().optional().nullable(),
+        created_by: z.string().optional().nullable(),
       }),
     ),
   });
