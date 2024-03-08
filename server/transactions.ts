@@ -3,15 +3,21 @@ import { createClient } from "@/app/utils/supabase/server";
 import { Tables } from "@/types/supabase";
 import { cookies } from "next/headers";
 
-export async function getTransactionsById(id: string) {
+export async function getTransactionsById(id?: string) {
   const supabase = createClient(cookies());
+  let user_id = id as string;
+  if (!id) {
+    const { data, error } = await supabase.auth.getUser();
+    if (error || !data.user) return [];
+    user_id = data?.user.id;
+  }
 
   return await supabase
     .from("transactions")
     .select(
       "id, amount, description, created_at, transaction_date, tags (id, text)",
     )
-    .eq("created_by", id)
+    .eq("created_by", user_id)
     .throwOnError();
 }
 
