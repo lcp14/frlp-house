@@ -1,14 +1,14 @@
 "use server";
 import { createClient } from "@/app/utils/supabase/server";
-import { Tables } from "@/types/supabase";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
 export async function getTransactionsById(id?: string) {
   const supabase = createClient(cookies());
   let user_id = id as string;
   if (!id) {
     const { data, error } = await supabase.auth.getUser();
-    if (error || !data.user) return [];
+    if (error || !data.user) redirect("/login");
     user_id = data?.user.id;
   }
 
