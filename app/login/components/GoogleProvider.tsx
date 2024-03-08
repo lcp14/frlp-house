@@ -2,7 +2,7 @@
 import { createClient } from "@/app/utils/supabase/client";
 import { Button } from "@/components/ui/button";
 
-export default async function GoogleLoginButton() {
+export default function GoogleLoginButton() {
   const loginWithGoogle = async () => {
     const supabase = createClient();
     await supabase.auth.signInWithOAuth({
