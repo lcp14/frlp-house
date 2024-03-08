@@ -21,11 +21,6 @@ export default async function SideMenu() {
       href: "/",
     },
     {
-      title: "Dashboard",
-      icon: <LayoutDashboardIcon size={16} />,
-      href: "/dashboard",
-    },
-    {
       title: "Transactions",
       icon: <DollarSignIcon size={16} />,
       href: "/transactions",
@@ -49,7 +44,7 @@ export default async function SideMenu() {
           <UserCard avatar_url={data.user.user_metadata.avatar_url} />
         )}
         <Separator />
-        <div className="flex flex-col">
+        <div className="flex flex-col space-y-1">
           {menu.map((item, index) => (
             <Link href={item.href} key={index}>
               <Button

@@ -3,8 +3,6 @@ import { Inter } from "next/font/google";
 import { Providers } from "./_helpers/providers";
 import SideMenu from "./components/side-menu";
 import "./globals.css";
-import { createClient } from "./utils/supabase/server";
-import { cookies } from "next/headers";
 
 const inter = Inter({ subsets: ["latin"] });
 
