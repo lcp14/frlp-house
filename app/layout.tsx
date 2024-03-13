@@ -3,6 +3,8 @@ import { Inter } from "next/font/google";
 import { Providers } from "./_helpers/providers";
 import SideMenu from "./components/side-menu";
 import "./globals.css";
+import Breadcrumb from "./components/breadcrumb";
+import DrawerForm from "./components/form-drawer";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -22,7 +24,10 @@ export default async function RootLayout({
         <body className={inter.className}>
           <div className="flex min-h-screen">
             <SideMenu />
-            <div className="flex-grow p-8">{children}</div>
+            <div id="main-layout" className="flex-grow p-8">
+              <Breadcrumb />
+              <div className="py-4">{children}</div>
+            </div>
           </div>
         </body>
       </html>

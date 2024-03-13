@@ -77,28 +77,28 @@ export type Database = {
         Row: {
           created_at: string
           id: number
-          shared_ratio: number
-          shared_with: string
+          split_amount: number
+          split_with: string | null
           transaction_id: number
         }
         Insert: {
           created_at?: string
           id?: number
-          shared_ratio: number
-          shared_with: string
+          split_amount: number
+          split_with?: string | null
           transaction_id: number
         }
         Update: {
           created_at?: string
           id?: number
-          shared_ratio?: number
-          shared_with?: string
+          split_amount?: number
+          split_with?: string | null
           transaction_id?: number
         }
         Relationships: [
           {
-            foreignKeyName: "public_transactions_shared_shared_with_fkey"
-            columns: ["shared_with"]
+            foreignKeyName: "public_transactions_shared_split_with_fkey"
+            columns: ["split_with"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
@@ -144,6 +144,27 @@ export type Database = {
             referencedColumns: ["id"]
           }
         ]
+      }
+      users: {
+        Row: {
+          email: string | null
+          first_name: string | null
+          id: string
+          last_name: string | null
+        }
+        Insert: {
+          email?: string | null
+          first_name?: string | null
+          id: string
+          last_name?: string | null
+        }
+        Update: {
+          email?: string | null
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+        }
+        Relationships: []
       }
     }
     Views: {
