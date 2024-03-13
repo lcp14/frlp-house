@@ -35,6 +35,7 @@ import { CommandLoading } from "cmdk";
 import { useToast } from "@/components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";
 import Tag from "./tag";
+import { revalidatePath } from "next/cache";
 
 export function TransactionForm() {
   const { data, isLoading } = useQuery({
@@ -212,7 +213,6 @@ export function TransactionForm() {
           render={({ field }) => (
             <FormItem>
               <FormLabel> Tags </FormLabel>
-              {JSON.stringify(errors) ?? ""}
               <Popover>
                 <PopoverTrigger asChild>
                   <FormControl>
@@ -286,6 +286,7 @@ export function TransactionForm() {
                   </Command>
                 </PopoverContent>
               </Popover>
+              <FormMessage />
             </FormItem>
           )}
         />

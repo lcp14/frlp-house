@@ -24,7 +24,7 @@ export default function GoogleLoginButton() {
           access_type: "offline",
           prompt: "consent",
         },
-        redirectTo: getURL(),
+        redirectTo: getURL() + "/auth/callback",
       },
     });
   };

@@ -52,3 +52,8 @@ export async function getTransactionsSumAggByMonth(transactions: any) {
     return acc;
   }, {});
 }
+
+export async function deleteTransactionById(transaction_id: number) {
+  const supabase = createClient(cookies());
+  return await supabase.from("transactions").delete().eq("id", transaction_id);
+}
