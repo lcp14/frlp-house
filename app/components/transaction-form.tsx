@@ -1,4 +1,3 @@
-"use client";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -24,7 +23,7 @@ import {
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { CalendarIcon, RotateCwIcon, XIcon } from "lucide-react";
+import { CalendarIcon, RotateCwIcon } from "lucide-react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 import { createClient } from "../utils/supabase/client";
@@ -35,10 +34,13 @@ import { CommandLoading } from "cmdk";
 import { useToast } from "@/components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";
 import Tag from "./tag";
-import { revalidatePath } from "next/cache";
 
-export function TransactionForm() {
-  const { data, isLoading } = useQuery({
+export function TransactionForm({
+  onAddTransaction,
+}: {
+  onAddTransaction: () => void;
+}) {
+  const { data, isLoading, refetch } = useQuery({
     queryKey: ["tags"],
     queryFn: () => getTagsByLoggedUser(),
   });
@@ -66,10 +68,11 @@ export function TransactionForm() {
     resolver: zodResolver(transactionSchema),
     defaultValues: {
       transaction_date: new Date(),
+      amount: 0,
+      description: undefined,
+      tags: [],
     },
   });
-
-  const errors = form.formState.errors;
 
   const onSubmit = async (values: z.infer<typeof transactionSchema>) => {
     const { amount, description, transaction_date, tags } = values;
@@ -114,6 +117,8 @@ export function TransactionForm() {
       title: "Transaction created",
       description: "Transaction has been created successfully",
     });
+    form.reset();
+    onAddTransaction();
   };
   const { replace, append } = useFieldArray({
     control: form.control,
@@ -129,27 +134,11 @@ export function TransactionForm() {
     if (field?.value?.filter((element: any) => tag.id === element.id).length)
       return;
     append(tag);
+    refetch();
   }
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <FormField
-          control={form.control}
-          name="amount"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel> Amount </FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="Insert transaction value (e.g 134.02)"
-                  type="number"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        ></FormField>
         <FormField
           control={form.control}
           name="description"
@@ -165,48 +154,67 @@ export function TransactionForm() {
               <FormMessage />
             </FormItem>
           )}
-        ></FormField>
-        <FormField
-          control={form.control}
-          name="transaction_date"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Transaction date</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "w-[240px] pl-3 text-left font-normal",
-                        !field.value && "text-muted-foreground",
-                      )}
-                    >
-                      {field.value ? (
-                        format(field.value, "PPP")
-                      ) : (
-                        <span>Pick a date</span>
-                      )}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={field.value}
-                    onSelect={field.onChange}
-                    disabled={(date) =>
-                      date > new Date() || date < new Date("1900-01-01")
-                    }
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-              <FormMessage />
-            </FormItem>
-          )}
         />
+        <div className="flex items-center gap-2">
+          <FormField
+            control={form.control}
+            name="amount"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel> Amount </FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Insert transaction value (e.g 134.02)"
+                    type="number"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="transaction_date"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Transaction date</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "w-[240px] text-left font-normal",
+                          !field.value && "text-muted-foreground",
+                        )}
+                      >
+                        {field.value ? (
+                          format(field.value, "PPP")
+                        ) : (
+                          <span>Pick a date</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={field.value}
+                      onSelect={field.onChange}
+                      disabled={(date) =>
+                        date > new Date() || date < new Date("1900-01-01")
+                      }
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
         <FormField
           control={form.control}
           name="tags"
@@ -290,7 +298,9 @@ export function TransactionForm() {
             </FormItem>
           )}
         />
-        <Button type="submit">Submit</Button>
+        <Button className="float-right" type="submit">
+          Add transaction
+        </Button>
       </form>
     </Form>
   );
