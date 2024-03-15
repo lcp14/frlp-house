@@ -1,5 +1,6 @@
 "use server";
 import { createClient } from "@/app/utils/supabase/server";
+import { QueryData } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -15,7 +16,7 @@ export async function getTransactionsById(id?: string) {
   return await supabase
     .from("transactions")
     .select(
-      "id, amount, description, created_at, transaction_date, tags (id, text)",
+      "id, amount, description, created_at, transaction_date, tags (id, text), transactions_shared (split_amount, split_with, users(id, email))",
     )
     .eq("created_by", user_id)
     .throwOnError();

@@ -12,24 +12,31 @@ import {
 } from "@/components/ui/dialog";
 import { PlusIcon } from "@radix-ui/react-icons";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
 export function TransactionsTable() {
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["transactions"],
     queryFn: () => getTransactionsById(),
   });
 
+  const [open, setOpen] = useState(false);
+
   return (
     <div className="space-y-4">
-      <Dialog>
+      <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger>
-          <Button size={"icon"}>
-            {" "}
-            <PlusIcon />{" "}
+          <Button size={"icon"} onClick={() => setOpen}>
+            <PlusIcon />
           </Button>
         </DialogTrigger>
         <DialogContent>
           <DialogTitle>Transaction form</DialogTitle>
-          <TransactionForm onAddTransaction={() => refetch()} />
+          <TransactionForm
+            onAddTransaction={() => {
+              refetch();
+              setOpen(!open);
+            }}
+          />
         </DialogContent>
       </Dialog>
       <hr />

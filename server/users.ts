@@ -3,14 +3,11 @@
 import { createClient } from "@/app/utils/supabase/server";
 import { cookies } from "next/headers";
 
-export async function checkIfUserExists(emails: string[]) {
+export async function getUsersByEmails(emails: string[]) {
   const supabase = createClient(cookies());
-  const { data, error } = await supabase
+  return await supabase
     .from("users")
     .select()
-    .in("email", emails);
-  if (!data) {
-    return false;
-  }
-  return true;
+    .in("email", emails)
+    .throwOnError();
 }

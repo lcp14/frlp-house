@@ -41,25 +41,34 @@ import { redirect } from "next/navigation";
 import { ArrowRightIcon } from "@radix-ui/react-icons";
 import { deleteTransactionById } from "@/server/transactions";
 
-type Columns = {
-  id: number;
-  description: string | null;
-  amount: number;
-  transaction_date: string;
-  tags: {
-    text: string;
-  }[];
-};
-
-export const columns: ColumnDef<Columns>[] = [
+export const columns: ColumnDef<any>[] = [
   {
     header: "Description",
     accessorKey: "description",
+    cell: function ({ row }) {
+      const transactions_shared = row.original.transactions_shared;
+      console.log(transactions_shared);
+      return (
+        <div>
+          <span> {row.original.description} </span>
+          {transactions_shared.length
+            ? transactions_shared.map((t: any) => (
+                <span className="text-xs" key={t.id}>
+                  {" "}
+                  {t.users.email}{" "}
+                </span>
+              ))
+            : ""}
+        </div>
+      );
+    },
   },
   {
     header: "Amount",
     accessorKey: "amount",
     cell: ({ row }) => {
+      const transaction_shared = row.original.transactions_shared;
+
       return (
         <span className="text-right">
           {row.original.amount < 0 ? "-" : ""}
@@ -67,6 +76,15 @@ export const columns: ColumnDef<Columns>[] = [
             style: "currency",
             currency: "BRL",
           })}
+          {
+            <div className="flex flex-col items-start">
+              {transaction_shared.map((t: any) => (
+                <span className="text-xs" key={t.id}>
+                  {currency(t.split_amount).format()}
+                </span>
+              ))}{" "}
+            </div>
+          }
         </span>
       );
     },
@@ -84,7 +102,7 @@ export const columns: ColumnDef<Columns>[] = [
     cell: ({ row }) => {
       return (
         <div className="space-x-1">
-          {row.original.tags?.map((tag, index: number) => (
+          {row.original.tags?.map((tag: any, index: number) => (
             <Tag key={index} tag={tag} />
           ))}
         </div>
@@ -145,7 +163,7 @@ export const columns: ColumnDef<Columns>[] = [
 type SplitWithDrawerProps = {
   open: boolean;
   setOpen: (value: boolean) => void;
-  transaction: Columns;
+  transaction: any;
 };
 function SplitWithDrawerForm({
   open,
@@ -170,7 +188,12 @@ function SplitWithDrawerForm({
 }
 
 function SplitWithForm({ transaction }: any) {
-  const [emails, setEmails] = useState<{ email: string; value: number }[]>([]);
+  const [emails, setEmails] = useState<{ email: string; value: number }[]>([
+    {
+      email: "you",
+      value: transaction.amount,
+    },
+  ]);
   const supabase = createClient();
 
   const userFormSchema = z.object({
@@ -197,7 +220,7 @@ function SplitWithForm({ transaction }: any) {
     }
     const emailsCopy = [...emails, { email, value: 0 }];
     const distribution = currency(transaction.amount).distribute(
-      emailsCopy.length + 1,
+      emailsCopy.length,
     );
     const newEmails = emailsCopy.map((email, index) => {
       return { email: email.email, value: distribution[index].value };
@@ -206,7 +229,16 @@ function SplitWithForm({ transaction }: any) {
   };
 
   async function onSubmitShared(emails: { email: string; value: number }[]) {
-    const payload = emails.slice(1).map((email) => {
+    const { data, error } = await supabase.auth.getSession();
+    if (!data || !data.session || error) {
+      redirect("/login");
+    }
+    const userEmail = data.session.user?.email;
+    if (!userEmail) {
+      throw new Error("User email not found");
+    }
+    emails[0].email = userEmail;
+    const payload = emails.map((email) => {
       return {
         split_with: email.email,
         split_amount: email.value,

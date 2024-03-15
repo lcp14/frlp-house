@@ -44,13 +44,19 @@ export default async function Page() {
     (acc: any, curr) => {
       acc.positive += curr.amount > 0 ? curr.amount : 0;
       acc.negative += curr.amount < 0 ? curr.amount : 0;
-      acc.total += curr.amount;
+      if (!curr.transactions_shared.length) {
+        acc.total += curr.amount;
+      } else {
+        acc.total += curr.transactions_shared[0].split_amount;
+        acc.shared_total += curr.transactions_shared[1].split_amount; //error
+      }
       return acc;
     },
     {
       positive: 0,
       negative: 0,
       total: 0,
+      shared_total: 0,
     },
   );
 
@@ -63,6 +69,7 @@ export default async function Page() {
         <CardContent>
           <div className={`text-2xl font-bold text-green-500`}>
             + {formatCurrency(sumTransactions.positive)}
+            <br />+ {formatCurrency(sumTransactions.shared_total)}
           </div>
         </CardContent>
       </Card>
