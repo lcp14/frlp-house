@@ -1,19 +1,45 @@
-import Link from "next/link";
+"use client";
 import { Button } from "@/components/ui/button";
-import UserCard from "./user-card";
-import { Separator } from "@/components/ui/separator";
 import {
-  CreditCardIcon,
-  DollarSignIcon,
-  HomeIcon,
-  LayoutDashboardIcon,
-} from "lucide-react";
-import { createClient } from "../utils/supabase/server";
-import { cookies } from "next/headers";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { AvatarIcon } from "@radix-ui/react-icons";
+  NavigationMenu,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
+import { DollarSignIcon, HomeIcon } from "lucide-react";
+import Link from "next/link";
+import React from "react";
 
-export default async function SideMenu() {
+const ListItem = React.forwardRef<
+  React.ElementRef<"a">,
+  React.ComponentPropsWithoutRef<"a">
+>(({ className, title, children, ...props }, ref) => {
+  return (
+    <li>
+      <NavigationMenuLink asChild>
+        <a
+          ref={ref}
+          className={cn(
+            "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
+            className,
+          )}
+          {...props}
+        >
+          <div className="text-sm font-medium leading-none">{title}</div>
+          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+            {children}
+          </p>
+        </a>
+      </NavigationMenuLink>
+    </li>
+  );
+});
+ListItem.displayName = "ListItem";
+
+export default function SideMenu() {
   const menu = [
     {
       title: "Home",
@@ -26,36 +52,35 @@ export default async function SideMenu() {
       href: "/transactions",
     },
   ];
-  const supabase = createClient(cookies());
-  const { data, error } = await supabase.auth.getUser();
+  // const supabase = createClient(cookies());
+  // const { data, error } = await supabase.auth.getUser();
 
   return (
     <div className="w-72 min-w-72 border-r-2 p-2 shadow-sm">
       <div className="space-y-3 p-4">
-        {error || !data.user ? (
-          <Avatar>
-            {" "}
-            <AvatarFallback>
-              {" "}
-              <AvatarIcon />{" "}
-            </AvatarFallback>{" "}
-          </Avatar>
-        ) : (
-          <UserCard avatar_url={data.user.user_metadata.avatar_url} />
-        )}
         <Separator />
-        <div className="flex flex-col space-y-1">
-          {menu.map((item, index) => (
-            <Link href={item.href} key={index}>
-              <Button
-                className="w-full justify-start space-x-2"
-                variant={"ghost"}
-              >
-                {item.icon} <span> {item.title} </span>
-              </Button>
-            </Link>
-          ))}
-        </div>
+
+        <NavigationMenu orientation="vertical">
+          <NavigationMenuList>
+            <ul>
+              {menu.map((item) => {
+                return (
+                  <NavigationMenuItem key={item.href}>
+                    <Link href={item.href} legacyBehavior passHref>
+                      <NavigationMenuLink
+                        className={navigationMenuTriggerStyle()}
+                      >
+                        <div className="flex space-x-2 justify-start items-center">
+                          {item.icon} <span> {item.title} </span>
+                        </div>
+                      </NavigationMenuLink>
+                    </Link>
+                  </NavigationMenuItem>
+                );
+              })}
+            </ul>
+          </NavigationMenuList>
+        </NavigationMenu>
       </div>
     </div>
   );

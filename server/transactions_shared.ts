@@ -32,3 +32,27 @@ export async function createTransactionShared(
     .select()
     .throwOnError();
 }
+
+export async function getTransactionsSharedByTransactionId(
+  transaction_id: number,
+) {
+  const supabase = createClient(cookies());
+  return await supabase
+    .from("transactions_shared")
+    .select("id, split_amount, split_with, users(id, email)")
+    .eq("transaction_id", transaction_id)
+    .throwOnError();
+}
+
+export async function getTransactionSharedBySlitWithCurrentUser(id: string) {
+  const supabase = createClient(cookies());
+  return await supabase
+    .from("transactions_shared")
+    .select(
+      "id, split_amount, split_with, transactions(*, users:created_by(id, email))",
+    )
+    .neq("created_by", id)
+    .eq("split_with", id)
+    .order("created_at", { ascending: false })
+    .throwOnError();
+}

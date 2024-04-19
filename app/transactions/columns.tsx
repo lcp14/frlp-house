@@ -20,7 +20,7 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "../utils/supabase/client";
 import {
   Form,
@@ -40,35 +40,17 @@ import { Badge } from "@/components/ui/badge";
 import { redirect } from "next/navigation";
 import { ArrowRightIcon } from "@radix-ui/react-icons";
 import { deleteTransactionById } from "@/server/transactions";
+import React from "react";
 
 export const columns: ColumnDef<any>[] = [
   {
     header: "Description",
     accessorKey: "description",
-    cell: function ({ row }) {
-      const transactions_shared = row.original.transactions_shared;
-      console.log(transactions_shared);
-      return (
-        <div>
-          <span> {row.original.description} </span>
-          {transactions_shared.length
-            ? transactions_shared.map((t: any) => (
-                <span className="text-xs" key={t.id}>
-                  {" "}
-                  {t.users.email}{" "}
-                </span>
-              ))
-            : ""}
-        </div>
-      );
-    },
   },
   {
     header: "Amount",
     accessorKey: "amount",
     cell: ({ row }) => {
-      const transaction_shared = row.original.transactions_shared;
-
       return (
         <span className="text-right">
           {row.original.amount < 0 ? "-" : ""}
@@ -76,15 +58,22 @@ export const columns: ColumnDef<any>[] = [
             style: "currency",
             currency: "BRL",
           })}
-          {
-            <div className="flex flex-col items-start">
-              {transaction_shared.map((t: any) => (
-                <span className="text-xs" key={t.id}>
-                  {currency(t.split_amount).format()}
-                </span>
-              ))}{" "}
-            </div>
-          }
+        </span>
+      );
+    },
+  },
+  {
+    header: "Split amount",
+    accessorKey: "split_amount",
+    cell: ({ row }) => {
+      if (!row.original.split_amount) return "-";
+      return (
+        <span className="text-right">
+          {row.original.split_amount < 0 ? "-" : ""}
+          {Math.abs(row.original.split_amount).toLocaleString("pt-br", {
+            style: "currency",
+            currency: "BRL",
+          })}
         </span>
       );
     },
@@ -115,6 +104,7 @@ export const columns: ColumnDef<any>[] = [
     cell: function Cell({ row }) {
       const transaction = row.original;
       const [open, setOpen] = useState(false);
+      if (!transaction.belongs_to_me) return;
 
       async function handleDeleteTransaction() {
         const { data, error } = await deleteTransactionById(row.original.id);
@@ -127,11 +117,8 @@ export const columns: ColumnDef<any>[] = [
       return (
         <>
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
+            <DropdownMenuTrigger>
+              <MoreHorizontal className="h-4 w-4" />
             </DropdownMenuTrigger>
             <DropdownMenuContent>
               <DropdownMenuItem onClick={() => setOpen(!open)}>
@@ -165,14 +152,22 @@ type SplitWithDrawerProps = {
   setOpen: (value: boolean) => void;
   transaction: any;
 };
+
 function SplitWithDrawerForm({
   open,
   setOpen,
   transaction,
 }: SplitWithDrawerProps) {
+  const mainLayout = React.useRef<HTMLDivElement | null>(null);
+  React.useEffect(() => {
+    mainLayout.current = document.getElementById(
+      "main-layout",
+    ) as HTMLDivElement;
+  });
+
   return (
     <Drawer open={open} onOpenChange={(value) => setOpen(value)}>
-      <DrawerPortal container={document.getElementById("main-layout")}>
+      <DrawerPortal container={mainLayout.current}>
         <DrawerContent>
           <DrawerHeader>
             <DrawerTitle>Split With...</DrawerTitle>
