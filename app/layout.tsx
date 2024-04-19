@@ -4,7 +4,6 @@ import { Providers } from "./_helpers/providers";
 import SideMenu from "./components/side-menu";
 import "./globals.css";
 import Breadcrumb from "./components/breadcrumb";
-import DrawerForm from "./components/form-drawer";
 
 const inter = Inter({ subsets: ["latin"] });
 

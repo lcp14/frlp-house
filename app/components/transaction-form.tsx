@@ -1,3 +1,4 @@
+"use client";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -23,31 +24,18 @@ import {
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { CalendarIcon, RotateCwIcon } from "lucide-react";
+import { CalendarIcon } from "lucide-react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
-import { createClient } from "../utils/supabase/client";
-import { useQuery } from "@tanstack/react-query";
-import { createTag, getTagsByLoggedUser } from "@/server/tags";
-import React from "react";
-import { CommandLoading } from "cmdk";
-import { useToast } from "@/components/ui/use-toast";
+import { createTag } from "@/server/tags";
 import { Badge } from "@/components/ui/badge";
 import Tag from "./tag";
+import { createTransaction } from "@/server/transactions";
+import { Tables } from "@/types/supabase";
+import React from "react";
 
-export function TransactionForm({
-  onAddTransaction,
-}: {
-  onAddTransaction: () => void;
-}) {
-  const { data, isLoading, refetch } = useQuery({
-    queryKey: ["tags"],
-    queryFn: () => getTagsByLoggedUser(),
-  });
-
-  const tags = data?.data ?? [];
+export function TransactionForm({ tags }: { tags: Tables<"tags">[] }) {
   const [search, setSearch] = React.useState("");
-  const { toast } = useToast();
 
   const transactionSchema = z.object({
     amount: z.coerce.number(),
@@ -59,7 +47,7 @@ export function TransactionForm({
       z.object({
         id: z.number().optional().nullable(),
         text: z.string(),
-        created_at: z.string().optional().nullable(),
+        created_at: z.string().optional(),
         created_by: z.string().optional().nullable(),
       }),
     ),
@@ -69,56 +57,14 @@ export function TransactionForm({
     defaultValues: {
       transaction_date: new Date(),
       amount: 0,
-      description: undefined,
+      description: "",
       tags: [],
     },
   });
 
   const onSubmit = async (values: z.infer<typeof transactionSchema>) => {
-    const { amount, description, transaction_date, tags } = values;
-
-    const payload = {
-      amount,
-      transaction_date: transaction_date.toISOString(),
-      description,
-    };
-
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from("transactions")
-      .insert(payload)
-      .select();
-
-    if (error) {
-      toast({
-        title: "Transaction error",
-        description: "Transaction was not addded",
-        variant: "destructive",
-      });
-    }
-
-    if (data?.length) {
-      const tagPayload = tags.map((tag) => ({
-        transaction_id: data[0].id,
-        tag_id: tag.id as number,
-      }));
-      const { error } = await supabase
-        .from("transactions_tags")
-        .insert(tagPayload);
-      if (error) {
-        toast({
-          title: "Tags was not added",
-          description: "Tags was not succesfully added",
-        });
-        return;
-      }
-    }
-    toast({
-      title: "Transaction created",
-      description: "Transaction has been created successfully",
-    });
+    await createTransaction(values);
     form.reset();
-    onAddTransaction();
   };
   const { replace, append } = useFieldArray({
     control: form.control,
@@ -134,7 +80,6 @@ export function TransactionForm({
     if (field?.value?.filter((element: any) => tag.id === element.id).length)
       return;
     append(tag);
-    refetch();
   }
   return (
     <Form {...form}>
@@ -254,11 +199,6 @@ export function TransactionForm({
                       value={search}
                     />
                     <CommandList>
-                      {isLoading && (
-                        <CommandLoading className="h-50 flex items-center justify-center p-4 align-middle">
-                          <RotateCwIcon size={12} className="animate-spin" />{" "}
-                        </CommandLoading>
-                      )}
                       {tags?.map((tag) => (
                         <CommandItem
                           key={tag.id}
@@ -298,9 +238,9 @@ export function TransactionForm({
             </FormItem>
           )}
         />
-        <Button className="float-right" type="submit">
-          Add transaction
-        </Button>
+        <div className="flex justify-end">
+          <Button type="submit">Add transaction</Button>
+        </div>
       </form>
     </Form>
   );

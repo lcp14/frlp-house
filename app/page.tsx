@@ -33,7 +33,10 @@ export default async function Page() {
     redirect("/login");
   }
 
-  const { data: transactions } = await getTransactionsById(data?.user.id);
+  const { data: transactions } = await getTransactionsById(
+    supabase,
+    data?.user.id,
+  );
   if (!transactions) {
     return;
   }
