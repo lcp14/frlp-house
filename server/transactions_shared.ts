@@ -39,7 +39,9 @@ export async function getTransactionsSharedByTransactionId(
   const supabase = createClient(cookies());
   return await supabase
     .from("transactions_shared")
-    .select("id, split_amount, split_with, users(id, email)")
+    .select(
+      "id, split_amount, split_with:users!public_transactions_shared_split_with_fkey(id, email)",
+    )
     .eq("transaction_id", transaction_id)
     .throwOnError();
 }
@@ -55,4 +57,14 @@ export async function getTransactionSharedBySlitWithCurrentUser(id: string) {
     .eq("split_with", id)
     .order("created_at", { ascending: false })
     .throwOnError();
+}
+
+export async function deleteTransactionSharedByTransactionId(id: number) {
+  const supabase = createClient(cookies());
+  const response = await supabase
+    .from("transactions_shared")
+    .delete()
+    .eq("transaction_id", id)
+    .throwOnError();
+  return response;
 }

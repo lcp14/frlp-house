@@ -1,5 +1,4 @@
 "use client";
-import { Button } from "@/components/ui/button";
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -52,8 +51,6 @@ export default function SideMenu() {
       href: "/transactions",
     },
   ];
-  // const supabase = createClient(cookies());
-  // const { data, error } = await supabase.auth.getUser();
 
   return (
     <div className="w-72 min-w-72 border-r-2 p-2 shadow-sm">

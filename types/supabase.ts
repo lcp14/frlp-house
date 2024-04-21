@@ -76,7 +76,7 @@ export type Database = {
       transactions_shared: {
         Row: {
           created_at: string
-          created_by: string | null
+          created_by: string
           id: number
           split_amount: number
           split_with: string
@@ -84,7 +84,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          created_by?: string | null
+          created_by?: string
           id?: number
           split_amount: number
           split_with: string
@@ -92,7 +92,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          created_by?: string | null
+          created_by?: string
           id?: number
           split_amount?: number
           split_with?: string
@@ -157,22 +157,16 @@ export type Database = {
       }
       users: {
         Row: {
-          email: string | null
-          first_name: string | null
+          email: string
           id: string
-          last_name: string | null
         }
         Insert: {
-          email?: string | null
-          first_name?: string | null
+          email: string
           id: string
-          last_name?: string | null
         }
         Update: {
-          email?: string | null
-          first_name?: string | null
+          email?: string
           id?: string
-          last_name?: string | null
         }
         Relationships: [
           {
