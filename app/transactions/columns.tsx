@@ -34,13 +34,18 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import currency from "currency.js";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { createTransactionShared } from "@/server/transactions_shared";
+import {
+  createTransactionShared,
+  deleteTransactionSharedByTransactionId,
+  getTransactionsSharedByTransactionId,
+} from "@/server/transactions_shared";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { redirect } from "next/navigation";
 import { ArrowRightIcon } from "@radix-ui/react-icons";
 import { deleteTransactionById } from "@/server/transactions";
 import React from "react";
+import { Database } from "@/types/supabase";
 
 export const columns: ColumnDef<any>[] = [
   {
@@ -189,6 +194,22 @@ function SplitWithForm({ transaction }: any) {
       value: transaction.amount,
     },
   ]);
+  const [loading, setLoading] = useState(false);
+
+  React.useEffect(() => {
+    getTransactionsSharedByTransactionId(transaction.t_id).then((response) => {
+      if (!response?.data) return;
+      const emails = response.data.map((r) => {
+        return {
+          email: r.split_with?.email ?? "Error fetching email",
+          value: r.split_amount,
+        };
+      });
+      setEmails(emails);
+      setLoading(true);
+    });
+  }, [transaction.t_id]);
+
   const supabase = createClient();
 
   const userFormSchema = z.object({
@@ -237,11 +258,22 @@ function SplitWithForm({ transaction }: any) {
       return {
         split_with: email.email,
         split_amount: email.value,
-        created_at: undefined,
-        transaction_id: transaction.id,
+        transaction_id: transaction.id as number,
       };
     });
     await createTransactionShared(payload);
+  }
+
+  async function onClickDeleteSplitForm(
+    transaction: Database["public"]["Functions"]["get_user_transactions"]["Returns"][0],
+  ) {
+    const { data, error } = await deleteTransactionSharedByTransactionId(
+      transaction.t_id,
+    );
+    if (!data || error) {
+      console.error(error);
+    }
+    console.info("Transaction shared deleted");
   }
 
   return (
@@ -304,24 +336,30 @@ function SplitWithForm({ transaction }: any) {
       </Form>
       <div className="flex justify-center space-y-2 p-4">
         <div className="max-h-32 overflow-y-scroll pl-2">
-          {emails.slice(0).map((email, index) => (
-            <div key={index} className="flex items-center space-x-2">
-              <span className="text-base"> {email.email} </span>
-              <ArrowRightIcon />
-              <span className="text-sm font-thin">
-                {email.value.toLocaleString("pt-BR", {
-                  style: "currency",
-                  currency: "BRL",
-                })}
-              </span>
-            </div>
-          ))}
+          {loading &&
+            emails.slice(0).map((email, index) => (
+              <div key={index} className="flex items-center space-x-2">
+                <span className="text-base"> {email.email} </span>
+                <ArrowRightIcon />
+                <span className="text-sm font-thin">
+                  {email.value.toLocaleString("pt-BR", {
+                    style: "currency",
+                    currency: "BRL",
+                  })}
+                </span>
+              </div>
+            ))}
         </div>
       </div>
-      <Button className="float-right" onClick={() => onSubmitShared(emails)}>
-        {" "}
-        Confirm shared{" "}
-      </Button>
+      <div className="float-right space-x-2">
+        <Button
+          variant={"destructive"}
+          onClick={() => onClickDeleteSplitForm(transaction)}
+        >
+          Delete
+        </Button>
+        <Button onClick={() => onSubmitShared(emails)}> Confirm shared </Button>
+      </div>
     </div>
   );
 }

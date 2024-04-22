@@ -1,6 +1,15 @@
+import { cookies } from "next/headers";
+import { createClient } from "../utils/supabase/server";
 import GoogleLoginButton from "./components/GoogleProvider";
+import { redirect } from "next/navigation";
 
 export default async function Login() {
+  const supabase = createClient(cookies());
+  const { data: user } = await supabase.auth.getUser();
+  if (user) {
+    redirect("/");
+  }
+
   return (
     <div className="m-0 flex h-full w-full flex-col items-center justify-center space-y-2">
       <h1 className="mt-4 flex-grow text-xl font-semibold">
