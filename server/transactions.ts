@@ -1,4 +1,5 @@
 "use server";
+import { transactionSchema } from "@/app/components/transaction-form";
 import { createClient } from "@/app/utils/supabase/server";
 import { Database, Tables } from "@/types/supabase";
 import { SupabaseClient } from "@supabase/supabase-js";
@@ -6,6 +7,7 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { z } from "zod";
 
 export async function getTransactionsById(
   supabase: SupabaseClient,
@@ -65,16 +67,6 @@ export async function deleteTransactionById(transaction_id: number) {
   return await supabase.from("transactions").delete().eq("id", transaction_id);
 }
 
-type UserTransactions = {
-  id: number;
-  amount: number;
-  description: string;
-  transaction_date: string;
-  tags: { id: number; text: string }[];
-  split_amount: number;
-  belongs_to_me: boolean;
-};
-
 export async function getCurrentUserTransactions(
   cookies: ReadonlyRequestCookies,
   id: string,
@@ -85,7 +77,9 @@ export async function getCurrentUserTransactions(
     .order("transaction_date", { ascending: false });
 }
 
-export async function createTransaction(values: any) {
+export async function createTransaction(
+  values: z.infer<typeof transactionSchema>,
+) {
   const { amount, description, transaction_date, tags } = values;
 
   const payload = {
@@ -95,7 +89,6 @@ export async function createTransaction(values: any) {
   };
 
   const supabase = createClient(cookies());
-  const user = supabase.auth.getUser();
   const response = await supabase.from("transactions").insert(payload).select();
   if (response.error) {
     return {
@@ -105,7 +98,7 @@ export async function createTransaction(values: any) {
     };
   }
 
-  const tagPayload = tags.map((tag: Tables<"tags">) => ({
+  const tagPayload = tags.map((tag) => ({
     transaction_id: response.data[0].id,
     tag_id: tag.id as number,
   }));

@@ -1,7 +1,14 @@
 import { Badge } from "@/components/ui/badge";
+import { Tables } from "@/types/supabase";
 import { XIcon } from "lucide-react";
 
-export default function Tag({ tag, onRemove }: { tag: any; onRemove?: any }) {
+export default function Tag({
+  tag,
+  onRemove,
+}: {
+  tag: Tables<"tags">;
+  onRemove?: () => void;
+}) {
   return (
     <Badge className="space-x-1" variant={"secondary"}>
       <span> {tag.text} </span>
