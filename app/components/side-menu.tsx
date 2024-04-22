@@ -7,13 +7,9 @@ import {
 import {
   DollarSignIcon,
   Home,
-  HomeIcon,
   LineChart,
-  Package,
-  Package2,
   PiggyBank,
   Settings,
-  ShoppingCart,
   Users2,
 } from "lucide-react";
 import Link from "next/link";

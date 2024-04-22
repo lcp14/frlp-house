@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal } from "lucide-react";
+import { Loader, Loader2, MoreHorizontal } from "lucide-react";
 import Tag from "../components/tag";
 import {
   Drawer,
@@ -17,10 +17,8 @@ import {
   DrawerHeader,
   DrawerPortal,
   DrawerTitle,
-  DrawerTrigger,
 } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
-import { useEffect, useState } from "react";
 import { createClient } from "../utils/supabase/client";
 import {
   Form,
@@ -108,7 +106,7 @@ export const columns: ColumnDef<any>[] = [
     header: "Actions",
     cell: function Cell({ row }) {
       const transaction = row.original;
-      const [open, setOpen] = useState(false);
+      const [open, setOpen] = React.useState(false);
       if (!transaction.belongs_to_me) return;
 
       async function handleDeleteTransaction() {
@@ -188,15 +186,18 @@ function SplitWithDrawerForm({
 }
 
 function SplitWithForm({ transaction }: any) {
-  const [emails, setEmails] = useState<{ email: string; value: number }[]>([
+  const [emails, setEmails] = React.useState<
+    { email: string; value: number }[]
+  >([
     {
       email: "you",
       value: transaction.amount,
     },
   ]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = React.useState(false);
 
   React.useEffect(() => {
+    setLoading(true);
     getTransactionsSharedByTransactionId(transaction.t_id).then((response) => {
       if (!response?.data) return;
       const emails = response.data.map((r) => {
@@ -206,7 +207,7 @@ function SplitWithForm({ transaction }: any) {
         };
       });
       setEmails(emails);
-      setLoading(true);
+      setLoading(false);
     });
   }, [transaction.t_id]);
 
@@ -336,7 +337,8 @@ function SplitWithForm({ transaction }: any) {
       </Form>
       <div className="flex justify-center space-y-2 p-4">
         <div className="max-h-32 overflow-y-scroll pl-2">
-          {loading &&
+          {loading && <Loader2 className="animate-spin w-4 h-4" />}
+          {!loading &&
             emails.slice(0).map((email, index) => (
               <div key={index} className="flex items-center space-x-2">
                 <span className="text-base"> {email.email} </span>

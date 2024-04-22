@@ -9,6 +9,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import dynamic from "next/dynamic";
 import { formatCurrency } from "./_helpers/_currency";
+import { Suspense } from "react";
 
 const SumByTagBarChart = dynamic(
   () => import("@/app/components/charts/sum-by-tag-pie-chart"),

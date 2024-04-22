@@ -14,6 +14,7 @@ import { PlusIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getTagsByUserId } from "@/server/tags";
 import { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies";
+import { Suspense } from "react";
 
 const getCachedTransactions = unstable_cache(
   async (cookies: ReadonlyRequestCookies, id: string) =>
@@ -46,10 +47,14 @@ export default async function Page() {
         </DialogTrigger>
         <DialogContent>
           <DialogTitle>Transaction form</DialogTitle>
-          <TransactionForm tags={tags ?? []} />
+          <Suspense>
+            <TransactionForm tags={tags ?? []} />
+          </Suspense>
         </DialogContent>
       </Dialog>
-      <TransactionsTable transactions={transactions ?? []} />
+      <Suspense>
+        <TransactionsTable transactions={transactions ?? []} />
+      </Suspense>
     </div>
   );
 }
