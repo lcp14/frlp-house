@@ -23,7 +23,7 @@ export default async function RootLayout({
         <body className={inter.className}>
           <div className="flex min-h-screen">
             <SideMenu />
-            <div id="main-layout" className="flex-grow p-8">
+            <div id="main-layout" className="flex-grow p-8 m-0">
               <Breadcrumb />
               <div className="py-4">{children}</div>
             </div>
