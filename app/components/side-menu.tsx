@@ -7,13 +7,9 @@ import {
 import {
   DollarSignIcon,
   Home,
-  HomeIcon,
   LineChart,
-  Package,
-  Package2,
   PiggyBank,
   Settings,
-  ShoppingCart,
   Users2,
 } from "lucide-react";
 import Link from "next/link";
@@ -58,7 +54,7 @@ export default function SideMenu() {
     },
     {
       title: "Smart Split",
-      href: "/smart-split",
+      href: "/smartsplit",
       icon: <Users2 className="h-5 w-5" />,
     },
     {

@@ -28,7 +28,9 @@ export default function Breadcrumb2() {
                   {capitalize(path)}
                 </BreadcrumbLink>
               </BreadcrumbItem>
-              <BreadcrumbSeparator key={index} />
+              {pathNames.length !== index + 1 && (
+                <BreadcrumbSeparator key={index} />
+              )}
             </>
           );
         })}
