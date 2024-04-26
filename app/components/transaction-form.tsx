@@ -25,7 +25,7 @@ import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
-import { useFieldArray, useForm } from "react-hook-form";
+import { FieldValue, useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 import { createTag } from "@/server/tags";
 import { Badge } from "@/components/ui/badge";
@@ -34,24 +34,25 @@ import { createTransaction } from "@/server/transactions";
 import { Tables } from "@/types/supabase";
 import React from "react";
 
+export const transactionSchema = z.object({
+  amount: z.coerce.number(),
+  description: z.string().min(2, {
+    message: "Description must be at least 2 characters long",
+  }),
+  transaction_date: z.date(),
+  tags: z.array(
+    z.object({
+      id: z.number(),
+      text: z.string(),
+      created_at: z.string(),
+      created_by: z.string().nullable(),
+    }),
+  ),
+});
+
 export function TransactionForm({ tags }: { tags: Tables<"tags">[] }) {
   const [search, setSearch] = React.useState("");
 
-  const transactionSchema = z.object({
-    amount: z.coerce.number(),
-    description: z.string().min(2, {
-      message: "Description must be at least 2 characters long",
-    }),
-    transaction_date: z.date(),
-    tags: z.array(
-      z.object({
-        id: z.number().optional().nullable(),
-        text: z.string(),
-        created_at: z.string().optional(),
-        created_by: z.string().optional().nullable(),
-      }),
-    ),
-  });
   const form = useForm<z.infer<typeof transactionSchema>>({
     resolver: zodResolver(transactionSchema),
     defaultValues: {
@@ -182,6 +183,7 @@ export function TransactionForm({ tags }: { tags: Tables<"tags">[] }) {
                                     (element) => tag.id !== element.id,
                                   ),
                                 );
+                                return;
                               }}
                             />
                           ))}
@@ -220,7 +222,12 @@ export function TransactionForm({ tags }: { tags: Tables<"tags">[] }) {
                               return;
                             }
 
-                            onSelectTag(field, { id: data[0]?.id, text: item });
+                            onSelectTag(field, {
+                              id: data[0]?.id,
+                              text: item,
+                              created_at: "",
+                              created_by: null,
+                            });
                           }}
                           value={search}
                         >
