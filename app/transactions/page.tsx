@@ -41,8 +41,8 @@ export default async function Page() {
     <div className="space-y-4">
       <Dialog>
         <DialogTrigger asChild>
-          <Button size={"icon"}>
-            <PlusIcon />
+          <Button className="space-x-2">
+            <PlusIcon /> <span> Add transaction </span>
           </Button>
         </DialogTrigger>
         <DialogContent>

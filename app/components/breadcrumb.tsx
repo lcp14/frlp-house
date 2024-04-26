@@ -10,7 +10,7 @@ import { usePathname } from "next/navigation";
 import { capitalize } from "../_helpers/_string";
 import React from "react";
 
-export default function Breadcrumb2() {
+export default function Breadcrumb2({ ...props }) {
   const path = usePathname();
 
   const pathNames = path.split("/").filter((path) => path);
@@ -18,7 +18,7 @@ export default function Breadcrumb2() {
   pathNames.unshift("home");
 
   return (
-    <Breadcrumb>
+    <Breadcrumb {...props}>
       <BreadcrumbList>
         {pathNames.map((path, index) => {
           return (

@@ -16,6 +16,7 @@ function renderLegend(value: string, entry: any) {
 }
 
 export default function transactionSumByMonth({ data }: { data: any }) {
+  console.log(data);
   return (
     <ResponsiveContainer width="100%" height={300} className={"p-4"}>
       <BarChart data={data}>
