@@ -1,8 +1,6 @@
 "use server";
 import { transactionSchema } from "@/app/components/transaction-form";
 import { createClient } from "@/app/utils/supabase/server";
-import { Database, Tables } from "@/types/supabase";
-import { SupabaseClient } from "@supabase/supabase-js";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies";
 import { cookies } from "next/headers";
@@ -10,9 +8,10 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 export async function getTransactionsById(
-  supabase: SupabaseClient,
+  cookies: ReadonlyRequestCookies,
   id?: string,
 ) {
+  const supabase = createClient(cookies);
   let user_id = id as string;
   if (!id) {
     const { data, error } = await supabase.auth.getUser();
@@ -23,14 +22,17 @@ export async function getTransactionsById(
   const query = await supabase
     .from("transactions")
     .select(
-      "id, amount, description, created_at, transaction_date, tags (id, text), transactions_shared (split_amount, split_with, users:split_with(id, email))",
+      "id, amount, description, created_at, transaction_date, tags (id, text), transactions_shared (split_amount, split_with, users:users!public_transactions_shared_split_with_fkey(id, email))",
     )
     .eq("created_by", user_id)
     .throwOnError();
   return query;
 }
 
-export async function getTransactionsSumAggByTag(transactions: any) {
+export async function getTransactionsSumAggByTag(
+  cookies: ReadonlyRequestCookies,
+) {
+  const { data: transactions } = await getTransactionsById(cookies);
   if (!transactions) {
     return [];
   }
@@ -46,7 +48,10 @@ export async function getTransactionsSumAggByTag(transactions: any) {
   }, {});
 }
 
-export async function getTransactionsSumAggByMonth(transactions: any) {
+export async function getTransactionsSumAggByMonth(
+  cookies: ReadonlyRequestCookies,
+) {
+  const { data: transactions } = await getTransactionsById(cookies);
   if (!transactions) {
     return [];
   }
@@ -72,9 +77,31 @@ export async function getCurrentUserTransactions(
   id: string,
 ) {
   const supabase = createClient(cookies);
-  return await supabase
+  const response = await supabase
     .rpc("get_user_transactions", { id: id })
-    .order("transaction_date", { ascending: false });
+    .order("transaction_date", { ascending: false })
+    .throwOnError();
+  return response;
+}
+
+export async function getCurrentUserTransactions30Days(
+  cookies: ReadonlyRequestCookies,
+  id: string,
+) {
+  const supabase = createClient(cookies);
+  const response = await supabase
+    .rpc("get_user_transactions", { id: id })
+    .gte(
+      "transaction_date",
+      new Date(
+        new Date().getFullYear(),
+        new Date().getMonth(),
+        1,
+      ).toISOString(),
+    )
+    .order("transaction_date", { ascending: false })
+    .throwOnError();
+  return response;
 }
 
 export async function createTransaction(

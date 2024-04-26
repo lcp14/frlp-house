@@ -1,15 +1,7 @@
 "use client";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { ColumnDef } from "@tanstack/react-table";
-import { Loader, Loader2, MoreHorizontal } from "lucide-react";
-import Tag from "../components/tag";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Drawer,
   DrawerContent,
@@ -18,8 +10,13 @@ import {
   DrawerPortal,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import { Input } from "@/components/ui/input";
-import { createClient } from "../utils/supabase/client";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Form,
   FormDescription,
@@ -28,56 +25,73 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import currency from "currency.js";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
+import { Input } from "@/components/ui/input";
+import { deleteTransactionById } from "@/server/transactions";
 import {
   createTransactionShared,
   deleteTransactionSharedByTransactionId,
   getTransactionsSharedByTransactionId,
 } from "@/server/transactions_shared";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { redirect } from "next/navigation";
-import { ArrowRightIcon } from "@radix-ui/react-icons";
-import { deleteTransactionById } from "@/server/transactions";
-import React from "react";
 import { Database } from "@/types/supabase";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { ArrowRightIcon } from "@radix-ui/react-icons";
+import { ColumnDef } from "@tanstack/react-table";
+import currency from "currency.js";
+import { Loader2, MoreHorizontal, UserRound, Users2 } from "lucide-react";
+import { redirect } from "next/navigation";
+import React from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { formatCurrency } from "../_helpers/_currency";
+import Tag from "../components/tag";
+import { createClient } from "../utils/supabase/client";
 
-export const columns: ColumnDef<any>[] = [
+export const columns: ColumnDef<
+  Database["public"]["Functions"]["get_user_transactions"]["Returns"][0]
+>[] = [
   {
     header: "Description",
     accessorKey: "description",
+    cell: ({ row }) => {
+      return (
+        <div>
+          <div className="flex gap-3">
+            {!row.original.belongs_to_me ? (
+              <Users2 className="w-4 h-4" />
+            ) : (
+              <UserRound className="w-4 h-4" />
+            )}{" "}
+            {row.original.description}
+          </div>
+          <div className="text-gray-500 text-xs">
+            {!row.original.split_amount && row.original.belongs_to_me
+              ? ""
+              : row.original.belongs_to_me
+                ? "Shared by me"
+                : "Shared with me"}
+          </div>
+        </div>
+      );
+    },
   },
   {
     header: "Amount",
     accessorKey: "amount",
     cell: ({ row }) => {
       return (
-        <span className="text-right">
-          {row.original.amount < 0 ? "-" : ""}
-          {Math.abs(row.original.amount).toLocaleString("pt-br", {
-            style: "currency",
-            currency: "BRL",
-          })}
-        </span>
-      );
-    },
-  },
-  {
-    header: "Split amount",
-    accessorKey: "split_amount",
-    cell: ({ row }) => {
-      if (!row.original.split_amount) return "-";
-      return (
-        <span className="text-right">
-          {row.original.split_amount < 0 ? "-" : ""}
-          {Math.abs(row.original.split_amount).toLocaleString("pt-br", {
-            style: "currency",
-            currency: "BRL",
-          })}
-        </span>
+        <>
+          <span className="text-right">
+            {row.original.amount < 0 ? "-" : ""}
+            {formatCurrency(row.original.amount)}
+          </span>
+          <div className="text-gray-500 text-xs">
+            {!row.original.split_amount && row.original.belongs_to_me
+              ? ""
+              : row.original.belongs_to_me
+                ? formatCurrency(row.original.split_amount)
+                : formatCurrency(row.original.split_amount)}
+          </div>
+        </>
       );
     },
   },
@@ -92,6 +106,8 @@ export const columns: ColumnDef<any>[] = [
     header: "Tags",
     accessorKey: "tags",
     cell: ({ row }) => {
+      if (!row.original.belongs_to_me) return;
+      if (!(row.original.tags instanceof Array)) return;
       return (
         <div className="space-x-1">
           {row.original.tags?.map((tag: any, index: number) => (
@@ -110,7 +126,7 @@ export const columns: ColumnDef<any>[] = [
       if (!transaction.belongs_to_me) return;
 
       async function handleDeleteTransaction() {
-        const { data, error } = await deleteTransactionById(row.original.id);
+        const { data, error } = await deleteTransactionById(row.original.t_id);
         if (!data || error) {
           console.error(error);
         }

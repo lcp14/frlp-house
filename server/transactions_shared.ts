@@ -4,6 +4,7 @@ import { createClient } from "@/app/utils/supabase/server";
 import { TablesInsert } from "@/types/supabase";
 import { cookies } from "next/headers";
 import { getUsersByEmails } from "./users";
+import { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies";
 
 export async function createTransactionShared(
   payload: TablesInsert<"transactions_shared">[],
@@ -46,12 +47,15 @@ export async function getTransactionsSharedByTransactionId(
     .throwOnError();
 }
 
-export async function getTransactionSharedBySlitWithCurrentUser(id: string) {
-  const supabase = createClient(cookies());
+export async function getTransactionSharedWithCurrentUser(
+  cookies: ReadonlyRequestCookies,
+  id: string,
+) {
+  const supabase = createClient(cookies);
   return await supabase
     .from("transactions_shared")
     .select(
-      "id, split_amount, split_with, transactions(*, users:created_by(id, email))",
+      "id, split_amount, created_by:users!public_transactions_shared_created_by_fkey(id, email)",
     )
     .neq("created_by", id)
     .eq("split_with", id)

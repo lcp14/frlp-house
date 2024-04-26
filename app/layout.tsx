@@ -18,18 +18,16 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <Providers>
-      <html lang="en">
-        <body className={inter.className}>
-          <div className="flex min-h-screen">
-            <SideMenu />
-            <div id="main-layout" className="flex-grow p-8 m-0">
-              <Breadcrumb />
-              <div className="py-4">{children}</div>
-            </div>
+    <html lang="en" suppressHydrationWarning>
+      <body className={inter.className}>
+        <div className="flex min-h-screen">
+          <SideMenu />
+          <div id="main-layout" className="flex-grow p-8 m-0">
+            <Breadcrumb />
+            <div className="py-4">{children}</div>
           </div>
-        </body>
-      </html>
-    </Providers>
+        </div>
+      </body>
+    </html>
   );
 }
