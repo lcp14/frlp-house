@@ -58,7 +58,7 @@ export default function SideMenu() {
     },
     {
       title: "Smart Split",
-      href: "/smart-split",
+      href: "/smartsplit",
       icon: <Users2 className="h-5 w-5" />,
     },
     {
