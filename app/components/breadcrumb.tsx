@@ -1,5 +1,4 @@
 "use client";
-
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -9,6 +8,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { usePathname } from "next/navigation";
 import { capitalize } from "../_helpers/_string";
+import React from "react";
 
 export default function Breadcrumb2() {
   const path = usePathname();
@@ -22,16 +22,16 @@ export default function Breadcrumb2() {
       <BreadcrumbList>
         {pathNames.map((path, index) => {
           return (
-            <>
-              <BreadcrumbItem key={index} className={"pr-2 text-black"}>
+            <React.Fragment key={path}>
+              <BreadcrumbItem key={path + index} className={"pr-2 text-black"}>
                 <BreadcrumbLink href={path === "home" ? "/" : path}>
                   {capitalize(path)}
                 </BreadcrumbLink>
               </BreadcrumbItem>
               {pathNames.length !== index + 1 && (
-                <BreadcrumbSeparator key={index} />
+                <BreadcrumbSeparator key={"sep" + path} />
               )}
-            </>
+            </React.Fragment>
           );
         })}
       </BreadcrumbList>

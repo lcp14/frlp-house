@@ -1,4 +1,10 @@
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -6,14 +12,17 @@ import {
 } from "@/components/ui/tooltip";
 import {
   DollarSignIcon,
+  Github,
   Home,
   LineChart,
   PiggyBank,
   Settings,
+  User2,
   Users2,
 } from "lucide-react";
 import Link from "next/link";
 import React from "react";
+import { Button } from "@/components/ui/button";
 
 function SideMenuItem({
   title,
@@ -80,18 +89,20 @@ export default function SideMenu() {
           ))}
         </nav>
         <nav className="mt-auto flex flex-col items-center gap-4 px-2 sm:py-5">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Link
-                href="#"
-                className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
-              >
-                <Settings className="h-5 w-5" />
-                <span className="sr-only">Settings</span>
-              </Link>
-            </TooltipTrigger>
-            <TooltipContent side="right">Settings</TooltipContent>
-          </Tooltip>
+          <DropdownMenu>
+            <DropdownMenuTrigger>
+              <Settings className="w-4 h-4" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" side="right">
+              <DropdownMenuItem>
+                {" "}
+                <User2 className="w-4 h-4 mr-2" /> Profile
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Github className="w-4 h-4 mr-2" /> Github
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </nav>
       </TooltipProvider>
     </aside>
