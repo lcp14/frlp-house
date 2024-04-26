@@ -5,8 +5,8 @@ import { redirect } from "next/navigation";
 
 export default async function Login() {
   const supabase = createClient(cookies());
-  const { data: user } = await supabase.auth.getUser();
-  if (user) {
+  const { data } = await supabase.auth.getUser();
+  if (data?.user) {
     redirect("/");
   }
 
