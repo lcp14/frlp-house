@@ -7,8 +7,17 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
-import { getCurrentUserTransactions } from "@/server/transactions";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  getCurrentUserTransactions,
+  getCurrentUserTransactions30Days,
+} from "@/server/transactions";
 import { getTransactionSharedWithCurrentUser } from "@/server/transactions_shared";
 import { unstable_cache } from "next/cache";
 import { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies";
@@ -17,6 +26,8 @@ import { redirect } from "next/navigation";
 import { formatCurrency } from "./_helpers/_currency";
 import { createClient } from "./utils/supabase/server";
 import { cn } from "@/lib/utils";
+import { Json } from "@/types/supabase";
+import { capitalize } from "./_helpers/_string";
 
 const getCachedTransactionsById = unstable_cache(
   async (cookies: ReadonlyRequestCookies, id: string) =>
@@ -29,6 +40,13 @@ const getCachedTransactionSharedWithCurrentUser = unstable_cache(
   async (cookies: ReadonlyRequestCookies, id) =>
     await getTransactionSharedWithCurrentUser(cookies, id),
   ["transactions-shared-by-id"],
+  { revalidate: 1 },
+);
+
+const getCachedTransactionsLast30Days = unstable_cache(
+  async (cookies: ReadonlyRequestCookies, id) =>
+    await getCurrentUserTransactions30Days(cookies, id),
+  ["transactions-last-30-days"],
   { revalidate: 1 },
 );
 
@@ -84,6 +102,36 @@ export default async function Page() {
     },
   );
 
+  const { data: transactions_last_30_days } =
+    await getCachedTransactionsLast30Days(cookies(), data?.user.id);
+
+  const total_per_tag = transactions_last_30_days?.reduce(
+    (acc: { [key: number]: { tag: string; value: number } }, curr) => {
+      (curr.tags as Json[]).forEach((tag) => {
+        if (curr.amount >= 0) return acc;
+
+        const tagId = tag.id;
+        if (!acc[tagId]) {
+          acc[tagId] = { tag: tag.text, value: 0 };
+        }
+        acc[tagId].value = acc[tagId].value + -1 * curr.amount;
+      });
+      return acc;
+    },
+    {},
+  );
+
+  const result = Object.values(total_per_tag ?? [])
+    .sort(
+      (a: { tag: string; value: number }, b: { tag: string; value: number }) =>
+        b.value - a.value,
+    )
+    .slice(0, 5)
+    .map((tag) => ({
+      tag: tag.tag,
+      value: tag.value,
+    }));
+
   return (
     <div className="grid gap-4 md:grid-cols-3">
       <DashboardNumberCard
@@ -122,6 +170,24 @@ export default async function Page() {
                   </TableCell>
                   <TableCell key={`transaction-${index}-settle`}>
                     <Button> Settle </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </DashboardNumberCard>
+      </div>
+      <div>
+        <DashboardNumberCard name="Most expensive tags last 30 days">
+          <Table>
+            <TableBody>
+              {result.map((tag, index) => (
+                <TableRow key={tag.tag}>
+                  <TableCell key={`tag-${index}-tag`}>
+                    {capitalize(tag.tag)}
+                  </TableCell>
+                  <TableCell key={`tag-${index}-value`}>
+                    <div>{formatCurrency(tag.value)}</div>
                   </TableCell>
                 </TableRow>
               ))}

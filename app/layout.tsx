@@ -35,7 +35,7 @@ export default async function RootLayout({
       <body className={inter.className}>
         <div className="flex max-h-screen">
           <SideMenu />
-          <div id="main-layout" className="flex-grow p-4 m-0">
+          <div id="main-layout" className="flex-grow p-4 overflow-auto">
             <div className="flex items-center py-2">
               <Breadcrumb className="hidden md:flex flex-grow" />
               <TooltipProvider>
@@ -56,7 +56,7 @@ export default async function RootLayout({
                 </Tooltip>
               </TooltipProvider>
             </div>
-            <div className="py-4 overflow-y-auto max-h-screen">{children}</div>
+            <div className="py-4">{children}</div>
           </div>
         </div>
       </body>

@@ -2,7 +2,7 @@
 import { PieChart, Pie, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { formatCurrency } from "@/app/_helpers/_currency";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
+const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#FF5432"];
 
 function CustomTooltip({ payload, label, active }: any) {
   if (active) {
