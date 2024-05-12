@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import {
   getCurrentUserTransactions,
-  getCurrentUserTransactions30Days,
+  getCurrentUserTransactionsByFilter,
 } from "@/server/transactions";
 import { getTransactionSharedWithCurrentUser } from "@/server/transactions_shared";
 import { unstable_cache } from "next/cache";
@@ -11,7 +11,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { formatCurrency } from "./_helpers/_currency";
 import { createClient } from "./utils/supabase/server";
-import { Tables } from "@/types/supabase";
+import { Database, Tables } from "@/types/supabase";
 import { capitalize } from "./_helpers/_string";
 import { DashboardNumberCard } from "./components/dashboard-number-card";
 
@@ -29,10 +29,26 @@ const getCachedTransactionSharedWithCurrentUser = unstable_cache(
   { revalidate: 1 },
 );
 
-const getCachedTransactionsLast30Days = unstable_cache(
+const getCachedTransactionsCurrentMonth = unstable_cache(
   async (cookies: ReadonlyRequestCookies, id) =>
-    await getCurrentUserTransactions30Days(cookies, id),
-  ["transactions-last-30-days"],
+    await getCurrentUserTransactionsByFilter(cookies, id, {
+      date_range: {
+        from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+      },
+    }),
+  ["transactions-current-month"],
+  { revalidate: 1 },
+);
+
+const getCachedTransactionsPreviousMonth = unstable_cache(
+  async (cookies: ReadonlyRequestCookies, id) =>
+    await getCurrentUserTransactionsByFilter(cookies, id, {
+      date_range: {
+        from: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1),
+        to: new Date(new Date().getFullYear(), new Date().getMonth(), 0),
+      },
+    }),
+  ["transactions-previous-month"],
   { revalidate: 1 },
 );
 
@@ -45,67 +61,51 @@ export default async function Page() {
     redirect("/login");
   }
 
-  const { data: transactions } = await getCachedTransactionsById(
-    cookies(),
-    data?.user.id,
-  );
+  const [
+    { data: transactions },
+    { data: transactions_shared },
+    { data: transactions_current_month },
+    { data: transactions_previous_month },
+  ] = await Promise.all([
+    getCachedTransactionsById(cookies(), data?.user.id),
+    getCachedTransactionSharedWithCurrentUser(cookies(), data?.user.id),
+    getCachedTransactionsCurrentMonth(cookies(), data?.user.id),
+    getCachedTransactionsPreviousMonth(cookies(), data?.user.id),
+  ]);
 
-  const { data: transactions_shared } =
-    await getCachedTransactionSharedWithCurrentUser(cookies(), data?.user.id);
-
-  const transactions_payload = transactions ?? [];
-
-  const sumTransactions = transactions_payload.reduce(
-    (
-      acc: {
-        positive: number;
-        negative: number;
-        total: number;
-        shared_total: number;
-      },
-      curr,
-    ) => {
-      if (curr.split_amount) {
-        acc.negative += curr.split_amount;
-        if (!curr.belongs_to_me) {
-          acc.shared_total += curr.split_amount;
-        }
-      } else if (!curr.belongs_to_me) {
-        acc.negative += curr.split_amount;
+  const sumTransactions = transactions_current_month?.reduce(
+    (acc, curr) => {
+      if (curr.amount >= 0) {
+        acc.positive += curr.amount;
       } else {
-        acc.positive += curr.amount > 0 ? curr.amount : 0;
-        acc.negative += curr.amount < 0 ? curr.amount : 0;
+        acc.negative += curr.amount;
       }
 
-      acc.total = acc.positive - acc.negative;
+      acc.total += curr.amount;
+
       return acc;
     },
-    {
-      positive: 0,
-      negative: 0,
-      total: 0,
-      shared_total: 0,
-    },
+    { positive: 0, negative: 0, total: 0 },
   );
 
-  const { data: transactions_last_30_days } =
-    await getCachedTransactionsLast30Days(cookies(), data?.user.id);
+  const sum_transactions_previous_month = transactions_previous_month?.reduce(
+    (acc, curr) => {
+      if (curr.amount >= 0) {
+        acc.positive += curr.amount;
+      } else {
+        acc.negative += curr.amount;
+      }
 
-  const total_per_tag = transactions_last_30_days?.reduce(
-    (acc: { [key: number]: { tag: string; value: number } }, curr) => {
-      (curr.tags as Tables<"tags">[]).forEach((tag) => {
-        if (curr.amount >= 0) return acc;
+      acc.total += curr.amount;
 
-        const tagId = tag.id;
-        if (!acc[tagId]) {
-          acc[tagId] = { tag: tag.text, value: 0 };
-        }
-        acc[tagId].value = acc[tagId].value + -1 * curr.amount;
-      });
       return acc;
     },
-    {},
+    { positive: 0, negative: 0, total: 0 },
   );
+
+  const total_per_tag =
+    transactions_current_month &&
+    reduceTransactionsByTag(transactions_current_month);
 
   const result = Object.values(total_per_tag ?? [])
     .sort(
@@ -125,23 +125,49 @@ export default async function Page() {
           new Date().getFullYear(),
           new Date().getMonth(),
           1,
-        ).toLocaleString("default", { month: "long", year: "2-digit" })}
+        ).toLocaleString("default", { month: "long", year: "numeric" })}
         value={sumTransactions?.total}
       >
-        <div>
-          <div>Pending: {formatCurrency(sumTransactions.shared_total)}</div>
-        </div>
+        <span className="px-2">
+          {new Date(
+            new Date().getFullYear(),
+            new Date().getMonth() - 1,
+            1,
+          ).toLocaleString("default", { month: "long", year: "numeric" })}
+        </span>
+        {sum_transactions_previous_month &&
+          formatCurrency(sum_transactions_previous_month?.total)}
       </DashboardNumberCard>
       <DashboardNumberCard
         name="Income"
-        value={sumTransactions.positive}
+        value={sumTransactions?.positive}
         type="positive"
-      />
+      >
+        <span className="px-2">
+          {new Date(
+            new Date().getFullYear(),
+            new Date().getMonth() - 1,
+            1,
+          ).toLocaleString("default", { month: "long", year: "numeric" })}
+        </span>
+        {sum_transactions_previous_month &&
+          formatCurrency(sum_transactions_previous_month?.positive)}
+      </DashboardNumberCard>
       <DashboardNumberCard
         name="Expenses"
-        value={sumTransactions.negative}
+        value={sumTransactions?.negative}
         type="negative"
-      />
+      >
+        <span className="px-2">
+          {new Date(
+            new Date().getFullYear(),
+            new Date().getMonth() - 1,
+            1,
+          ).toLocaleString("default", { month: "long", year: "numeric" })}
+        </span>
+        {sum_transactions_previous_month &&
+          formatCurrency(sum_transactions_previous_month?.negative)}
+      </DashboardNumberCard>
       <div className="col-start-1 col-end-3">
         <DashboardNumberCard name="In debt with">
           <Table>
@@ -164,7 +190,7 @@ export default async function Page() {
         </DashboardNumberCard>
       </div>
       <div>
-        <DashboardNumberCard name="Most expensive tags last 30 days">
+        <DashboardNumberCard name="Most expensive tags this month">
           <Table>
             <TableBody>
               {result.map((tag, index) => (
@@ -182,5 +208,27 @@ export default async function Page() {
         </DashboardNumberCard>
       </div>
     </div>
+  );
+}
+
+function reduceTransactionsByTag(
+  transactions: Database["public"]["Functions"]["get_user_transactions"]["Returns"][0][],
+): {
+  [key: number]: { tag: string; value: number };
+} {
+  return transactions.reduce(
+    (acc: { [key: number]: { tag: string; value: number } }, curr) => {
+      (curr.tags as Tables<"tags">[]).forEach((tag) => {
+        if (curr.amount >= 0) return acc;
+
+        const tagId = tag.id;
+        if (!acc[tagId]) {
+          acc[tagId] = { tag: tag.text, value: 0 };
+        }
+        acc[tagId].value = acc[tagId].value + -1 * curr.amount;
+      });
+      return acc;
+    },
+    {},
   );
 }
