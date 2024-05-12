@@ -6,8 +6,7 @@ import { unstable_cache } from "next/cache";
 import { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies";
 import dynamic from "next/dynamic";
 import { cookies } from "next/headers";
-import { DashboardNumberCard } from "../page";
-import { Suspense } from "react";
+import { DashboardNumberCard } from "../components/dashboard-number-card";
 
 const SumByTagBarChart = dynamic(
   () => import("@/app/components/charts/sum-by-tag-pie-chart"),
