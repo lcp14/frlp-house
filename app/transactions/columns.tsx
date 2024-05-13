@@ -26,7 +26,10 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { deleteTransactionById } from "@/server/transactions";
+import {
+  changeTransactionTypeById,
+  deleteTransactionById,
+} from "@/server/transactions";
 import {
   createTransactionShared,
   deleteTransactionSharedByTransactionId,
@@ -82,7 +85,6 @@ export const columns: ColumnDef<
       return (
         <>
           <span className="text-right">
-            {row.original.amount < 0 ? "-" : ""}
             {formatCurrency(row.original.amount)}
           </span>
           <div className="text-gray-500 text-xs">
@@ -135,6 +137,10 @@ export const columns: ColumnDef<
         console.info("Transaction deleted");
       }
 
+      async function updateTransactions(transaction: typeof row.original) {
+        await changeTransactionTypeById(transaction.t_id, transaction.amount);
+      }
+
       return (
         <>
           <DropdownMenu>
@@ -145,7 +151,9 @@ export const columns: ColumnDef<
               <DropdownMenuItem onClick={() => setOpen(!open)}>
                 Split With...
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => updateTransactions(row.original)}
+              >
                 {row.original.amount >= 0
                   ? "Change to expense"
                   : "Change to income"}

@@ -27,12 +27,14 @@ const getCachedTransactionsSumAggByTag = unstable_cache(
   async (cookies: ReadonlyRequestCookies) =>
     await getTransactionsSumAggByTag(cookies),
   ["transactions-sum-agg-by-tag"],
+  { revalidate: 1 },
 );
 
 const getCachedTransactionsSumAggByMonth = unstable_cache(
   async (cookies: ReadonlyRequestCookies) =>
     await getTransactionsSumAggByMonth(cookies),
   ["transactions-sum-agg-by-month"],
+  { revalidate: 1 },
 );
 
 export default async function Page() {
@@ -42,19 +44,17 @@ export default async function Page() {
   ]);
 
   return (
-    <div className="grid grid-cols-2 gap-2">
-      <DashboardNumberCard name="Sum agg by tag">
-        <div className="h-[400px]">
-          <Suspense>
-            <SumByTagBarChart data={Object.values(sumAggByTag)} />
-          </Suspense>
-        </div>
-      </DashboardNumberCard>
-      <DashboardNumberCard name="Sum agg by month">
-        <Suspense>
+    <div className="grid grid-cols-3 gap-2">
+      <div className="col-span-3">
+        <DashboardNumberCard name="Sum agg by tag">
+          <SumByTagBarChart data={Object.values(sumAggByTag)} />
+        </DashboardNumberCard>
+      </div>
+      <div className="col-span-3">
+        <DashboardNumberCard name="Sum agg by month">
           <SumByMonth data={Object.values(transactionByMonth)} />
-        </Suspense>
-      </DashboardNumberCard>
+        </DashboardNumberCard>
+      </div>
     </div>
   );
 }

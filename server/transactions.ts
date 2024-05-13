@@ -36,16 +36,21 @@ export async function getTransactionsSumAggByTag(
   if (!transactions) {
     return [];
   }
-  return transactions.reduce((acc: any, curr) => {
-    curr.tags.forEach((tag: any) => {
-      const tagId = tag.id;
-      if (!acc[tagId]) {
-        acc[tagId] = { tag: tag.text, value: 0 };
-      }
-      acc[tagId].value = acc[tagId].value + curr.amount;
-    });
-    return acc;
-  }, {});
+  return transactions.reduce(
+    (acc: { [key: number]: { tag: string; value: number } }, curr) => {
+      curr.tags.forEach((tag) => {
+        if (curr.amount >= 0) return acc;
+
+        const tagId = tag.id;
+        if (!acc[tagId]) {
+          acc[tagId] = { tag: tag.text, value: 0 };
+        }
+        acc[tagId].value = acc[tagId].value + -1 * curr.amount;
+      });
+      return acc;
+    },
+    {},
+  );
 }
 
 export async function getTransactionsSumAggByMonth(
@@ -62,11 +67,12 @@ export async function getTransactionsSumAggByMonth(
     const year = new Date(curr.transaction_date).toLocaleString("default", {
       year: "2-digit",
     });
+    if (curr.amount >= 0) return acc;
     const key = `${month}-${year}`;
     if (!acc[key]) {
       acc[key] = { key, value: 0 };
     }
-    acc[key].value = acc[key].value + curr.amount;
+    acc[key].value = -1 * acc[key].value + curr.amount;
     return acc;
   }, {});
 }
@@ -149,10 +155,22 @@ export async function createTransaction(
     };
   }
   revalidateTag("my-transactions");
-  revalidatePath("/", "page");
+  revalidatePath("/transactions", "page");
   return {
     status: "success",
     title: "Transaction created",
     description: "Transaction has been created successfully",
   };
+}
+
+export async function changeTransactionTypeById(id: number, value: number) {
+  const supabase = createClient(cookies());
+  const response = await supabase
+    .from("transactions")
+    .update({ amount: value * -1 })
+    .eq("id", id)
+    .throwOnError();
+  revalidateTag("my-transactions");
+  revalidatePath("/transactions", "page");
+  return response;
 }

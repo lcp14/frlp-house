@@ -21,7 +21,7 @@ export default function SumByTagPieChart({
   data: { tag: string; value: number }[];
 }) {
   return (
-    <ResponsiveContainer className={"p-2"}>
+    <ResponsiveContainer className={"p-2"} height={400}>
       <PieChart>
         <Tooltip content={<CustomTooltip />} />
         <Pie
