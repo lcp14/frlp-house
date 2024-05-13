@@ -1,6 +1,5 @@
 "use server";
 import { createClient } from "@/app/utils/supabase/server";
-import { SupabaseClient } from "@supabase/supabase-js";
 import { revalidateTag } from "next/cache";
 import { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies";
 import { cookies } from "next/headers";

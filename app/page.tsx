@@ -1,19 +1,5 @@
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import {
   getCurrentUserTransactions,
   getCurrentUserTransactions30Days,
@@ -25,9 +11,9 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { formatCurrency } from "./_helpers/_currency";
 import { createClient } from "./utils/supabase/server";
-import { cn } from "@/lib/utils";
-import { Json } from "@/types/supabase";
+import { Tables } from "@/types/supabase";
 import { capitalize } from "./_helpers/_string";
+import { DashboardNumberCard } from "./components/dashboard-number-card";
 
 const getCachedTransactionsById = unstable_cache(
   async (cookies: ReadonlyRequestCookies, id: string) =>
@@ -107,7 +93,7 @@ export default async function Page() {
 
   const total_per_tag = transactions_last_30_days?.reduce(
     (acc: { [key: number]: { tag: string; value: number } }, curr) => {
-      (curr.tags as Json[]).forEach((tag) => {
+      (curr.tags as Tables<"tags">[]).forEach((tag) => {
         if (curr.amount >= 0) return acc;
 
         const tagId = tag.id;
@@ -196,43 +182,5 @@ export default async function Page() {
         </DashboardNumberCard>
       </div>
     </div>
-  );
-}
-
-export function DashboardNumberCard({
-  name,
-  value,
-  type,
-  children,
-}: {
-  name: string;
-  value?: number;
-  type?: "positive" | "negative";
-  children?: React.ReactNode;
-}) {
-  return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardDescription>{name}</CardDescription>
-        {value !== undefined && (
-          <CardTitle
-            className={cn(
-              "text-4xl",
-              type === "negative"
-                ? "text-red-400"
-                : type === "positive"
-                  ? "text-green-400"
-                  : "",
-            )}
-          >
-            {formatCurrency(value)}
-          </CardTitle>
-        )}
-      </CardHeader>
-      <CardContent>
-        <div className="text-xs text-muted-foreground">{children}</div>
-      </CardContent>
-      <CardFooter></CardFooter>
-    </Card>
   );
 }
