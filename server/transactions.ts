@@ -101,24 +101,25 @@ export async function getCurrentUserTransactions(
   return response;
 }
 
-export async function getCurrentUserTransactions30Days(
+export async function getCurrentUserTransactionsByFilter(
   cookies: ReadonlyRequestCookies,
   id: string,
+  filter?: {
+    date_range?: { from?: Date; to?: Date };
+  },
 ) {
   const supabase = createClient(cookies);
-  const response = await supabase
-    .rpc("get_user_transactions", { id: id })
-    .gte(
-      "transaction_date",
-      new Date(
-        new Date().getFullYear(),
-        new Date().getMonth(),
-        1,
-      ).toISOString(),
-    )
-    .order("transaction_date", { ascending: false })
-    .throwOnError();
-  return response;
+  const query = supabase.rpc("get_user_transactions", { id: id });
+
+  if (filter?.date_range) {
+    filter.date_range.from &&
+      query.gte("transaction_date", filter.date_range.from.toISOString());
+    filter.date_range.to &&
+      query.lte("transaction_date", filter.date_range.to.toISOString());
+  }
+
+  query.order("transaction_date", { ascending: false }).throwOnError();
+  return await query;
 }
 
 export async function createTransaction(

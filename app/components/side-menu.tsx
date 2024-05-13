@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,9 +11,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { GitHubLogoIcon } from "@radix-ui/react-icons";
 import {
   DollarSignIcon,
   Github,
+  GithubIcon,
   Home,
   LineChart,
   PiggyBank,
@@ -22,7 +25,6 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import React from "react";
-import { Button } from "@/components/ui/button";
 
 function SideMenuItem({
   title,
@@ -40,8 +42,10 @@ function SideMenuItem({
           href={href}
           className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
         >
-          {icon}
-          <span className="sr-only">{title}</span>
+          <Button size="icon" variant="ghost">
+            {icon}
+            <span className="sr-only">{title}</span>
+          </Button>
         </Link>
       </TooltipTrigger>
       <TooltipContent side="right">{title}</TooltipContent>
@@ -90,8 +94,10 @@ export default function SideMenu() {
         </nav>
         <nav className="mt-auto flex flex-col items-center gap-4 px-2 sm:py-5">
           <DropdownMenu>
-            <DropdownMenuTrigger>
-              <Settings className="w-4 h-4" />
+            <DropdownMenuTrigger asChild>
+              <Button size={"icon"} variant={"ghost"}>
+                <Settings className="w-4 h-4" />
+              </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" side="right">
               <DropdownMenuItem>
@@ -99,7 +105,7 @@ export default function SideMenu() {
                 <User2 className="w-4 h-4 mr-2" /> Profile
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <Github className="w-4 h-4 mr-2" /> Github
+                <GitHubLogoIcon className="w-4 h-4 mr-2" /> Github
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
