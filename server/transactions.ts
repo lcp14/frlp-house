@@ -36,7 +36,7 @@ export async function getTransactionsSumAggByTag(
   if (!transactions) {
     return [];
   }
-  return transactions.reduce((acc: any, curr: any) => {
+  return transactions.reduce((acc: any, curr) => {
     curr.tags.forEach((tag: any) => {
       const tagId = tag.id;
       if (!acc[tagId]) {
@@ -55,10 +55,14 @@ export async function getTransactionsSumAggByMonth(
   if (!transactions) {
     return [];
   }
-  return transactions.reduce((acc: any, curr: any) => {
-    const month = new Date(curr.transaction_date).getMonth();
-    const year = new Date(curr.transaction_date).getFullYear();
-    const key = `${year}/${month}`;
+  return transactions.reduce((acc: any, curr) => {
+    const month = new Date(curr.transaction_date).toLocaleString("default", {
+      month: "long",
+    });
+    const year = new Date(curr.transaction_date).toLocaleString("default", {
+      year: "2-digit",
+    });
+    const key = `${month}-${year}`;
     if (!acc[key]) {
       acc[key] = { key, value: 0 };
     }
@@ -69,7 +73,14 @@ export async function getTransactionsSumAggByMonth(
 
 export async function deleteTransactionById(transaction_id: number) {
   const supabase = createClient(cookies());
-  return await supabase.from("transactions").delete().eq("id", transaction_id);
+  const response = await supabase
+    .from("transactions")
+    .delete()
+    .eq("id", transaction_id);
+  revalidateTag("my-transactions");
+  revalidatePath("/transactions", "page");
+  console.log(response);
+  return response;
 }
 
 export async function getCurrentUserTransactions(

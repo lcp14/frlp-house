@@ -45,6 +45,7 @@ import { z } from "zod";
 import { formatCurrency } from "../_helpers/_currency";
 import Tag from "../components/tag";
 import { createClient } from "../utils/supabase/client";
+import { revalidatePath, revalidateTag } from "next/cache";
 
 export const columns: ColumnDef<
   Database["public"]["Functions"]["get_user_transactions"]["Returns"][0]
@@ -127,8 +128,9 @@ export const columns: ColumnDef<
 
       async function handleDeleteTransaction() {
         const { data, error } = await deleteTransactionById(row.original.t_id);
-        if (!data || error) {
+        if (error) {
           console.error(error);
+          return;
         }
         console.info("Transaction deleted");
       }

@@ -36,9 +36,6 @@ const getCachedTransactionsSumAggByMonth = unstable_cache(
 );
 
 export default async function Page() {
-  // const sumAggByTag = await getCachedTransactionsSumAggByTag(cookies());
-  // const transactionByMonth =
-  //   await getCachedTransactionsSumAggByMonth(cookies());
   const [sumAggByTag, transactionByMonth] = await Promise.all([
     getCachedTransactionsSumAggByTag(cookies()),
     getCachedTransactionsSumAggByMonth(cookies()),
