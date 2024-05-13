@@ -46,12 +46,12 @@ export default async function Page() {
   return (
     <div className="grid grid-cols-3 gap-2">
       <div className="col-span-3">
-        <DashboardNumberCard name="Sum agg by tag">
+        <DashboardNumberCard name="Expenses by tag - All-time">
           <SumByTagBarChart data={Object.values(sumAggByTag)} />
         </DashboardNumberCard>
       </div>
       <div className="col-span-3">
-        <DashboardNumberCard name="Sum agg by month">
+        <DashboardNumberCard name="Expenses per month - All-time">
           <SumByMonth data={Object.values(transactionByMonth)} />
         </DashboardNumberCard>
       </div>
